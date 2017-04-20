@@ -6,7 +6,7 @@
 D [0-9]
 %%
 
-(D+|D*\.D+) {yylval.f = atof(yytext);
+({D}+|{D}*\.{D}+) {yylval.f = atof(yytext);
              return num;//return nonterminal
             }
 sin  return SIN;
