@@ -1,5 +1,1 @@
 calc
-*.lex.c
-*.yy.c
-*.tab.*
-*.output

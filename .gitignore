@@ -3,3 +3,7 @@
 *.out
 *.o
 *.tar.gz
+*.lex.c
+*.yy.c
+*.tab.*
+*.output
