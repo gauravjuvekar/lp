@@ -6,7 +6,7 @@
 typedef struct Table {
 	void *entries;
 	size_t entry_len;
-	size_t n_entries;
+	int n_entries;
 	size_t malloced_len;
 } Table;
 

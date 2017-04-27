@@ -9,6 +9,7 @@
 
 #define MAX_IDENTIFIER_LEN (32)
 #define MAX_ARGS (16)
+#define MAX_EXPANSION_DEPTH (16)
 
 
 typedef struct ArgList {
@@ -33,12 +34,15 @@ typedef struct MacroTableEntry {
 	size_t entries_end;
 } MacroTableEntry;
 
-extern const Table defined_macros;
-extern const Table macro_contents;
+extern Table defined_macros;
+extern Table macro_contents;
 
-int instruction_table_lookup_mnemonic(const void *search,
-                                      const void *table_term);
-int operand_table_lookup_mnemonic(const void *search, const void *table_term);
+void init_macro_tables(void);
+
+int macro_lookup_input_line(const void *search, const void *table_term);
+int macro_lookup_declaration(const void *search, const void *table_term);
+void emit_output_line(const InputLine *line);
+int find_arg_in_arglist(const char *arg, const ArgList *arglist);
 
 
 #endif /* ifndef ASM_H */

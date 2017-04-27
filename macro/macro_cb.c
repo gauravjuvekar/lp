@@ -1,22 +1,94 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "table.h"
 #include "macro.h"
 #include "macro_cb.h"
 
+typedef enum State {
+	STATE_DEFINING,
+	STATE_NORMAL_PROCESSING,
+	STATE_EXPANDING,
+} State;
+
+State g_state = STATE_NORMAL_PROCESSING;
+int g_currently_defining = -1;
+
+void expand_macro(InputLine *line, MacroTableEntry *entry) {
+	printf("Expanding %s\n", line->mnemonic);
+}
+
 void cb_macro_declaration(MacroDeclaration declaration) {
-	printf("Got a declaration\n");
-	printf("%s", declaration.name);
+	if (g_state != STATE_NORMAL_PROCESSING) {
+		fprintf(
+				stderr,
+				"*** Declaration while expanding or defining %s(%d)\n",
+				declaration.name, (int)declaration.arglist.n_args);
+		assert(0);
+
+	}
+	int index = table_index(
+			&defined_macros,
+			&declaration,
+			macro_lookup_declaration);
+	if (index < 0) {
+		MacroTableEntry entry;
+		entry.declaration = declaration;
+		entry.entries_start = macro_contents.n_entries;
+		g_currently_defining = table_insert(&defined_macros, &entry);
+		assert(g_currently_defining >= 0);
+		g_state = STATE_DEFINING;
+	}
+	else {
+		fprintf(
+				stderr,
+				"*** Re-declaration of %s(%d)\n",
+				declaration.name, (int)declaration.arglist.n_args);
+		assert(0);
+	}
 }
+
 void cb_end_input(void) {
-	printf("End of input\n");
+	if (g_state != STATE_NORMAL_PROCESSING) {
+		assert(g_state == STATE_DEFINING);
+		fprintf(stderr, "*** Unexpected EOF while defining a macro\n");
+		assert(0);
+	}
 }
+
+
 void cb_macro_end(void) {
-	printf("End of macro definition\n");
+	if (g_state != STATE_DEFINING) {
+		fprintf(stderr, "*** Misplaced MEND\n");
+		assert(0);
+	}
+	MacroTableEntry *entry = table_get(&defined_macros, g_currently_defining);
+	entry->entries_end = macro_contents.n_entries - 1;
+	g_currently_defining = -1;
+	g_state = STATE_NORMAL_PROCESSING;
 }
+
 void cb_asm_line(InputLine line) {
-	printf("Got an asm line\n");
-	printf("%s: %s ...\n", line.label, line.mnemonic);
+	assert(g_state != STATE_EXPANDING);
+	if (g_state == STATE_NORMAL_PROCESSING) {
+		int index;
+		if ((index = table_index(
+						&defined_macros,
+						&line,
+						macro_lookup_input_line)) >= 0) {
+			MacroTableEntry *entry = table_get(&defined_macros, index);
+			g_state = STATE_EXPANDING;
+			expand_macro(&line, entry);
+			g_state = STATE_NORMAL_PROCESSING;
+		}
+		else {
+			emit_output_line(&line);
+		}
+	}
+	else {
+		assert(g_state == STATE_DEFINING);
+		table_insert(&macro_contents, &line);
+	}
 }

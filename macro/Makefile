@@ -1,11 +1,14 @@
 
-macro: macro.lex.o macro.tab.o table.o macro_cb.o
+macro: macro.lex.o macro.tab.o table.o macro_cb.o macro.o
 	gcc $^ -ly -ll -lm -o $@
 
 table.o: table.c
 	gcc -c $< -o $@
 
 macro_cb.o: macro_cb.c
+	gcc -c $< -o $@
+
+macro.o: macro.c
 	gcc -c $< -o $@
 
 macro.lex.o: macro.lex.c macro.tab.h
