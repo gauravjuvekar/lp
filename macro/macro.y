@@ -30,16 +30,24 @@ input: /* empty */
 line:
         '\n'
     |   declaration '\n' {
-            cb_macro_declaration($1);
+            if (cb_macro_declaration($1)) {
+                return 1;
+            }
         }
     |   END '\n' {
-            cb_end_input();
+            if (cb_end_input()) {
+                return 1;
+            }
         }
     |   MACRO_END '\n' {
-            cb_macro_end();
+            if (cb_macro_end()) {
+                return 1;
+            }
         }
     |   asm_line '\n' {
-            cb_asm_line($1);
+            if (cb_asm_line($1)) {
+                return 1;
+            }
         }
     ;
 declaration:

@@ -37,10 +37,10 @@ void subst_args(
 	}
 }
 
-void expand_macro(InputLine *line, MacroTableEntry *entry, int recursion_left) {
+int expand_macro(InputLine *line, MacroTableEntry *entry, int recursion_left) {
 	if (!recursion_left) {
 		fprintf(stderr, "*** Max recursion depth while expanding\n");
-		assert(0);
+		return 1;
 	}
 	for (int line_i = entry->entries_start;
 			line_i < (int)entry->entries_end; line_i++) {
@@ -56,24 +56,27 @@ void expand_macro(InputLine *line, MacroTableEntry *entry, int recursion_left) {
 						&macro_line,
 						macro_lookup_input_line)) >= 0) {
 			/* Nested call */
-			expand_macro(
+			if (expand_macro(
 					&macro_line,
 					table_get(&defined_macros, index),
-					recursion_left - 1);
+					recursion_left - 1)) {
+				return 1;
+			}
 		}
 		else {
 			emit_output_line(&macro_line);
 		}
 	}
+	return 0;
 }
 
-void cb_macro_declaration(MacroDeclaration declaration) {
+int cb_macro_declaration(MacroDeclaration declaration) {
 	if (g_state != STATE_NORMAL_PROCESSING) {
 		fprintf(
 				stderr,
 				"*** Declaration while expanding or defining %s(%d)\n",
 				declaration.name, (int)declaration.arglist.n_args);
-		assert(0);
+		return 1;
 
 	}
 	int index = table_index(
@@ -93,31 +96,34 @@ void cb_macro_declaration(MacroDeclaration declaration) {
 				stderr,
 				"*** Re-declaration of %s(%d)\n",
 				declaration.name, (int)declaration.arglist.n_args);
-		assert(0);
+		return 1;
 	}
+	return 0;
 }
 
-void cb_end_input(void) {
+int cb_end_input(void) {
 	if (g_state != STATE_NORMAL_PROCESSING) {
 		assert(g_state == STATE_DEFINING);
 		fprintf(stderr, "*** Unexpected EOF while defining a macro\n");
-		assert(0);
+		return 1;
 	}
+	return 0;
 }
 
 
-void cb_macro_end(void) {
+int cb_macro_end(void) {
 	if (g_state != STATE_DEFINING) {
 		fprintf(stderr, "*** Misplaced MEND\n");
-		assert(0);
+		return 1;
 	}
 	MacroTableEntry *entry = table_get(&defined_macros, g_currently_defining);
 	entry->entries_end = macro_contents.n_entries;
 	g_currently_defining = -1;
 	g_state = STATE_NORMAL_PROCESSING;
+	return 0;
 }
 
-void cb_asm_line(InputLine line) {
+int cb_asm_line(InputLine line) {
 	assert(g_state != STATE_EXPANDING);
 	if (g_state == STATE_NORMAL_PROCESSING) {
 		int index;
@@ -127,7 +133,9 @@ void cb_asm_line(InputLine line) {
 						macro_lookup_input_line)) >= 0) {
 			MacroTableEntry *entry = table_get(&defined_macros, index);
 			g_state = STATE_EXPANDING;
-			expand_macro(&line, entry, MAX_EXPANSION_DEPTH);
+			if (expand_macro(&line, entry, MAX_EXPANSION_DEPTH)) {
+				return 1;
+			}
 			g_state = STATE_NORMAL_PROCESSING;
 		}
 		else {
@@ -138,4 +146,5 @@ void cb_asm_line(InputLine line) {
 		assert(g_state == STATE_DEFINING);
 		table_insert(&macro_contents, &line);
 	}
+	return 0;
 }
