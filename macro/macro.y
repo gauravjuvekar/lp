@@ -58,6 +58,12 @@ declaration:
             memcpy(&(tmp.arglist), &($3), sizeof(tmp.arglist));
             $$ = tmp;
         }
+    |   MACRO_START IDENTIFIER {
+            MacroDeclaration tmp;
+            strcpy(tmp.name, $2);
+            tmp.arglist.n_args = 0;
+            $$ = tmp;
+        }
     ;
 macro_arglist:
         MACRO_ARG {
