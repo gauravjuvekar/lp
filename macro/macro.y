@@ -38,6 +38,7 @@ line:
             if (cb_end_input()) {
                 return 1;
             }
+            return 0;
         }
     |   MACRO_END '\n' {
             if (cb_macro_end()) {
