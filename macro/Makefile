@@ -26,3 +26,7 @@ macro.tab.c macro.tab.h: macro.y
 
 .PHONY clean:
 	rm -f *.o *.tab.c *.tab.h *.lex.c *.lex.h
+
+# Disable the stupid builtin rules
+%.c: %.y
+%.c: %.l
