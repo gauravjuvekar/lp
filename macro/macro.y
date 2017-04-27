@@ -119,5 +119,6 @@ asm_line:
     ;
 %%
 int main() {
+    init_macro_tables();
     yyparse();
 }
