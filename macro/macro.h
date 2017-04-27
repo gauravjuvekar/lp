@@ -21,16 +21,7 @@ typedef struct MacroDeclaration {
 	ArgList arglist;
 } MacroDeclaration;
 
-typedef enum InputLineType {
-	INPUT_LINE_NORMAL,
-	INPUT_LINE_MACRO_DECLARATION,
-	INPUT_LINE_MEND,
-	INPUT_LINE_END,
-	INPUT_LINE_BLANK
-} InputLineType;
-
 typedef struct InputLine {
-	InputLineType type;
 	char label[MAX_IDENTIFIER_LEN];
 	char mnemonic[MAX_IDENTIFIER_LEN];
 	ArgList arglist;

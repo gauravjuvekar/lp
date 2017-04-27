@@ -1,3 +1,4 @@
+/* vim: set ts=4 sw=4 tw=80 sts=4 et :*/
 %{
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,65 +52,72 @@ declaration:
     ;
 macro_arglist:
         MACRO_ARG {
-			ArgList tmp;
-			tmp.n_args = 1;
-			strcpy(tmp.args[0], $1);
-			$$ = tmp;
+            ArgList tmp;
+            tmp.n_args = 1;
+            strcpy(tmp.args[0], $1);
+            $$ = tmp;
         }
-	|   macro_arglist ',' MACRO_ARG {
-			strcpy(($1).args[($1).n_args], $3);
-			($1).n_args += 1;
-			$$ = $1;
-		}
+    |   macro_arglist ',' MACRO_ARG {
+            strcpy(($1).args[($1).n_args], $3);
+            ($1).n_args += 1;
+            $$ = $1;
+        }
     ;
 arg:
         IDENTIFIER {
-			strcpy($$, $1);
-		}
+            strcpy($$, $1);
+        }
     |   MACRO_ARG {
-			strcpy($$, $1);
-		}
+            strcpy($$, $1);
+        }
     ;
 call_arglist:
         arg {
-			ArgList tmp;
-			tmp.n_args = 1;
-			strcpy(tmp.args[0], $1);
-			$$ = tmp;
+            ArgList tmp;
+            tmp.n_args = 1;
+            strcpy(tmp.args[0], $1);
+            $$ = tmp;
         }
     |   call_arglist ',' arg {
-			strcpy(($1).args[($1).n_args], $3);
-			($1).n_args += 1;
-			$$ = $1;
-		}
+            strcpy(($1).args[($1).n_args], $3);
+            ($1).n_args += 1;
+            $$ = $1;
+        }
     ;
 label:
         IDENTIFIER ':' {
-			strcpy($$, $1);
-		}
+            strcpy($$, $1);
+        }
     ;
 line_start:
-		IDENTIFIER {
-			InputLine tmp;
-			strcpy(tmp.mnemonic, $1);
-			tmp.label[0] = '\0';
-			$$ = tmp;
-		}
+        IDENTIFIER {
+            InputLine tmp;
+            strcpy(tmp.mnemonic, $1);
+            tmp.label[0] = '\0';
+            $$ = tmp;
+        }
     |   label IDENTIFIER {
-			InputLine tmp;
-			strcpy(tmp.mnemonic, $2);
-			strcpy(tmp.label, $1);
-			$$ = tmp;
-		}
+            InputLine tmp;
+            strcpy(tmp.mnemonic, $2);
+            strcpy(tmp.label, $1);
+            $$ = tmp;
+        }
     ;
 asm_line:
-		line_start macro_arglist
-    |   line_start call_arglist {
-			($1).arglist = $2;
+         line_start {
+			($1).arglist.n_args = 0;
 			$$ = $1;
-		}
+         }
+    |    line_start macro_arglist {
+            ($1).arglist = $2;
+            $$ = $1;
+        }
+    |   line_start call_arglist {
+            ($1).arglist = $2;
+            $$ = $1;
+        }
     ;
 %%
 int main() {
-	yyparse();
+    yyparse();
 }
