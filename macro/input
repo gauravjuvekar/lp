@@ -1,0 +1,14 @@
+MACRO M1 &a, &b, &c
+	M2 1, &b, c
+MEND
+
+MACRO M2 &e, &f, &g
+	BLAH &e, &g, &f
+MEND
+
+start: start1
+	M1 1, 2, 3
+	M1
+	M3
+	M2 5, 3, 2
+END
